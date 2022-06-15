@@ -33,9 +33,10 @@ def convert_db(db):
     cur.execute("COMMIT")
 
 
-if name == '__main__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'db',
+        help='Path to database to convert'
     )
     convert_db(vars(parser.parse_args())['db'])
