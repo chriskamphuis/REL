@@ -125,7 +125,7 @@ def modify_uppercase_phrase(s):
         return s
 
 
-@lru_cache
+@lru_cache(max_size=None)
 def anyascii_cached(t):
     return anyascii(t)
 
@@ -180,7 +180,7 @@ def make_equal_len(lists, fill_in=0, to_right=True):
     return eq_lists, mask
 
 
-@lru_cache
+@lru_cache(max_size=None)
 def is_important_word(s):
     """
     an important word is not a stopword, a number, or len == 1
