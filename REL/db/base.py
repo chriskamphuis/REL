@@ -142,7 +142,7 @@ class DB:
             res.append(e if e is None else np.frombuffer(e[0], dtype=np.float32))
         return res
 
-    @lru_cache(max_size=None)
+    @lru_cache(maxsize=None)
     def lookup(self, column, table_name, word):
         return self.cursor.execute(
             "select {} from {} where word = :word".format(column, table_name),
@@ -150,7 +150,7 @@ class DB:
         ).fetchone()
 
 
-    @lru_cache(max_size=None)
+    @lru_cache(maxsize=None)
     def lookup_wik(self, w, table_name, column):
         """
         Args:
