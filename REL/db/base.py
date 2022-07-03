@@ -40,12 +40,12 @@ class DB:
         """
         # open database in autocommit mode by setting isolation_level to None.
         db = sqlite3.connect(fname, isolation_level=None)
-        c = db.cursor()
+        self.c = db.cursor()
 
         q = "create table if not exists {}(word text primary key, {})".format(
             table_name, ", ".join(["{} {}".format(k, v) for k, v in columns.items()])
         )
-        c.execute(q)
+        self.c.execute(q)
         return db
 
     def create_index(self, columns=None, table_name=None):
@@ -53,7 +53,6 @@ class DB:
         #     self.columns = columns
         #     self.table_name = table_name
         #
-        c = self.db.cursor()
         # for i, (k, v) in enumerate(self.columns.items()):
         #     createSecondaryIndex = "CREATE INDEX if not exists idx_{} ON {}({})".format(
         #         k, self.table_name, k
@@ -64,14 +63,13 @@ class DB:
             "lower", "wiki", "lower"
         )
         print(createSecondaryIndex)
-        c.execute(createSecondaryIndex)
+        self.c.execute(createSecondaryIndex)
 
     def clear(self):
         """
         Deletes all embeddings from the database.
         """
-        c = self.db.cursor()
-        c.execute("delete from {}".format(self.table_name))
+        self.c.execute("delete from {}".format(self.table_name))
 
     def insert_batch_emb(self, batch):
         """
@@ -87,15 +85,14 @@ class DB:
                 ('!', [3, 4, 5]),
             ])
         """
-        c = self.db.cursor()
         binarized = [(word, array("f", emb).tobytes()) for word, emb in batch]
         try:
             # Adding the transaction statement reduces total time from approx 37h to 1.3h.
-            c.execute("BEGIN TRANSACTION;")
-            c.executemany(
+            self.c.execute("BEGIN TRANSACTION;")
+            self.c.executemany(
                 "insert into {} values (?, ?)".format(self.table_name), binarized
             )
-            c.execute("COMMIT;")
+            self.c.execute("COMMIT;")
         except Exception as e:
             print("insert failed\n{}".format([w for w, e in batch]))
             raise e
@@ -114,18 +111,17 @@ class DB:
                 ('!', [3, 4, 5]),
             ])
         """
-        c = self.db.cursor()
         binarized = [
             (word, self.dict_to_binary(p_e_m), lower, occ)
             for word, p_e_m, lower, occ in batch
         ]
         try:
             # Adding the transaction statement reduces total time from approx 37h to 1.3h.
-            c.execute("BEGIN TRANSACTION;")
-            c.executemany(
+            self.c.execute("BEGIN TRANSACTION;")
+            self.c.executemany(
                 "insert into {} values (?, ?, ?, ?)".format(self.table_name), binarized
             )
-            c.execute("COMMIT;")
+            self.c.execute("COMMIT;")
         except Exception as e:
             print("insert failed\n{}".format([w for w, e in batch]))
             raise e
@@ -149,17 +145,16 @@ class DB:
             embeddings for ``w``, if it exists.
             ``None``, otherwise.
         """
-        c = self.db.cursor()
 
         res = []
-        c.execute("BEGIN TRANSACTION;")
+        self.c.execute("BEGIN TRANSACTION;")
         for word in w:
-            e = c.execute(
+            e = self.c.execute(
                 "select {} from {} where word = :word".format(column, table_name),
                 {"word": word},
             ).fetchone()
             res.append(e if e is None else np.frombuffer(e[0], dtype=np.float32))
-        c.execute("COMMIT;")
+        self.c.execute("COMMIT;")
 
         return res
 
@@ -171,16 +166,15 @@ class DB:
             embeddings for ``w``, if it exists.
             ``None``, otherwise.
         """
-        c = self.db.cursor()
         # q = c.execute('select emb from embeddings where word = :word', {'word': w}).fetchone()
         # return array('f', q[0]).tolist() if q else None
         if column == "lower":
-            e = c.execute(
+            e = self.c.execute(
                 "select word from {} where {} = :word".format(table_name, column),
                 {"word": w},
             ).fetchone()
         else:
-            e = c.execute(
+            e = self.c.execute(
                 "select {} from {} where word = :word".format(column, table_name),
                 {"word": w},
             ).fetchone()
