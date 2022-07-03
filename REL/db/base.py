@@ -4,7 +4,7 @@ import sqlite3
 import numpy as np
 from array import array
 from os import makedirs, path
-
+from functools import lru_cache
 import requests
 
 
@@ -137,7 +137,7 @@ class DB:
         d = json.loads(jsn)
         return d
 
-    def lookup(self, w, table_name, column="emb"):
+    def lookup_list(self, w, table_name, column="emb"):
         """
         Args:
             w: word to look up.
@@ -147,17 +147,19 @@ class DB:
         """
 
         res = []
-        self.c.execute("BEGIN TRANSACTION;")
         for word in w:
-            e = self.c.execute(
-                "select {} from {} where word = :word".format(column, table_name),
-                {"word": word},
-            ).fetchone()
+            e = self.lookup(column, table_name, word)
             res.append(e if e is None else np.frombuffer(e[0], dtype=np.float32))
-        self.c.execute("COMMIT;")
-
         return res
 
+    @lru_cache(maxsize=None)
+    def lookup(self, column, table_name, word):
+        return self.cursor.execute(
+            "select {} from {} where word = :word".format(column, table_name),
+            {"word": word},
+        ).fetchone()
+
+    @lru_cache(maxsize=None)
     def lookup_wik(self, w, table_name, column):
         """
         Args:

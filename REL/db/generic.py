@@ -5,6 +5,7 @@ import numpy as np
 from gensim import utils
 from numpy import float32 as REAL
 from numpy import zeros
+from functools import lru_cache
 
 from REL.db.base import DB
 
@@ -38,7 +39,7 @@ class GenericLookup(DB):
         self.columns = columns
 
     def emb(self, words, table_name):
-        g = self.lookup(words, table_name)
+        g = self.lookup_list(words, table_name)
         return g
 
     def wiki(self, mention, table_name, column_name="p_e_m"):
