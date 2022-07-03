@@ -157,7 +157,7 @@ class DB:
                 "select {} from {} where word = :word".format(column, table_name),
                 {"word": word},
             ).fetchone()
-            res.append(e if e is None else array("f", e[0]).tolist())
+            res.append(e if e is None else np.frombuffer(e[0], dtype=np.float32))
         c.execute("COMMIT;")
 
         return res
