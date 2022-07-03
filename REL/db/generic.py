@@ -35,6 +35,7 @@ class GenericLookup(DB):
         self.d_emb = d_emb
         self.name = name
         self.db = self.initialize_db(path_db, table_name, columns)
+        self.cursor = self.db.cursor()
         self.table_name = table_name
         self.columns = columns
 
