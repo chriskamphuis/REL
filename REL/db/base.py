@@ -1,6 +1,7 @@
 import json
 import logging
 import sqlite3
+import numpy as np
 from array import array
 from os import makedirs, path
 
